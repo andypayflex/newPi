@@ -45,11 +45,49 @@ fi
 
 mkdir -p "$PI_HOME" "$ROOT_DIR/.pi"
 
+RUNTIME_BASE_URL="$BASE_URL"
+CAPTURE_LLM_REQUESTS="${PI_CAPTURE_LLM_REQUESTS:-0}"
+PROXY_PID=""
+
+if [[ "$CAPTURE_LLM_REQUESTS" == "1" || "$CAPTURE_LLM_REQUESTS" == "true" ]]; then
+  if ! command -v node >/dev/null 2>&1; then
+    echo "PI_CAPTURE_LLM_REQUESTS requires node on PATH"
+    exit 1
+  fi
+
+  PROXY_HOST="${PI_LLM_PROXY_HOST:-127.0.0.1}"
+  PROXY_PORT="${PI_LLM_PROXY_PORT:-8787}"
+  PROXY_LOG_DIR="${PI_LLM_PROXY_LOG_DIR:-$ROOT_DIR/.pi/llm-request-captures}"
+  RUNTIME_BASE_URL="http://${PROXY_HOST}:${PROXY_PORT}"
+
+  PI_LLM_PROXY_TARGET_BASE_URL="$BASE_URL" \
+    PI_LLM_PROXY_API_KEY="$API_KEY" \
+    PI_LLM_PROXY_HOST="$PROXY_HOST" \
+    PI_LLM_PROXY_PORT="$PROXY_PORT" \
+    PI_LLM_PROXY_LOG_DIR="$PROXY_LOG_DIR" \
+    node "$ROOT_DIR/scripts/llm-request-proxy.mjs" &
+  PROXY_PID="$!"
+
+  cleanup_proxy() {
+    if [[ -n "$PROXY_PID" ]] && kill -0 "$PROXY_PID" >/dev/null 2>&1; then
+      kill "$PROXY_PID" >/dev/null 2>&1 || true
+      wait "$PROXY_PID" >/dev/null 2>&1 || true
+    fi
+  }
+  trap cleanup_proxy EXIT INT TERM
+
+  sleep 0.5
+  if ! kill -0 "$PROXY_PID" >/dev/null 2>&1; then
+    wait "$PROXY_PID"
+    exit 1
+  fi
+fi
+
 cat > "$MODELS_FILE" <<EOF
 {
   "providers": {
     "azure-foundry": {
-      "baseUrl": "$BASE_URL",
+      "baseUrl": "$RUNTIME_BASE_URL",
       "api": "openai-completions",
       "apiKey": "\$AZURE_FOUNDRY_API_KEY",
       "headers": {
@@ -59,8 +97,10 @@ cat > "$MODELS_FILE" <<EOF
         {
           "id": "$MODEL_ID",
           "name": "Payflex Foundry",
-          "input": ["text", "image"],
-          "reasoning": true
+          "input": ["text"],
+          "reasoning": true,
+          "contextWindow": 1000000,
+          "maxTokens": 384000
         }
       ]
     }
@@ -76,6 +116,9 @@ cat > "$SETTINGS_FILE" <<EOF
 }
 EOF
 
-cd "$ROOT_DIR"
 PI_BIN="$(resolve_pi_bin)"
-exec "$PI_BIN" --model "$MODEL_ID"
+if [[ -n "$PROXY_PID" ]]; then
+  "$PI_BIN" --provider azure-foundry --model "$MODEL_ID" "$@"
+else
+  exec "$PI_BIN" --provider azure-foundry --model "$MODEL_ID" "$@"
+fi
