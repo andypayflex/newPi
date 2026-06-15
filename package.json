@@ -1,0 +1,9 @@
+{
+  "name": "pi-azure-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local Pi coding agent scaffold for Azure-hosted models",
+  "scripts": {
+    "pi": "bash scripts/run-pi.sh"
+  }
+}

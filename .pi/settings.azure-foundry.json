@@ -1,0 +1,5 @@
+{
+  "defaultProvider": "azure-foundry",
+  "defaultModel": "my-foundry-model",
+  "defaultThinkingLevel": "medium"
+}

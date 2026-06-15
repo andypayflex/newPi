@@ -1,0 +1,5 @@
+{
+  "defaultProvider": "azure-foundry",
+  "defaultModel": "DeepSeek-V4-Pro",
+  "defaultThinkingLevel": "off"
+}

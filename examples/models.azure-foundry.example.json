@@ -1,0 +1,22 @@
+{
+  "providers": {
+    "azure-foundry": {
+      "baseUrl": "$AZURE_FOUNDRY_BASE_URL",
+      "api": "openai-completions",
+      "apiKey": "$AZURE_FOUNDRY_API_KEY",
+      "headers": {
+        "api-key": "$AZURE_FOUNDRY_API_KEY"
+      },
+      "models": [
+        {
+          "id": "my-foundry-model",
+          "name": "Azure Foundry Model",
+          "input": ["text", "image"],
+          "reasoning": true,
+          "contextWindow": 128000,
+          "maxTokens": 16384
+        }
+      ]
+    }
+  }
+}
