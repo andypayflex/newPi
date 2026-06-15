@@ -14,12 +14,38 @@ Use the built-in Azure provider first unless your endpoint is not a standard Azu
 - `.pi/settings.json` - project-local Pi defaults
 - `.env.pi.example` - environment variables for the built-in Azure provider
 - `examples/models.azure-foundry.example.json` - custom provider example for non-standard Foundry endpoints
+- `scripts/setup.sh` - one-command bootstrap (Node, Pi, packages, .env.pi)
 - `scripts/run-pi.sh` - loads `.env.pi` and starts `pi`
 - `AGENTS.md` - project instructions Pi will load automatically
 
-## 1. Install Pi
+## Quick Start (one command)
 
-Pi's current docs show:
+```bash
+./scripts/setup.sh
+```
+
+That handles everything: Node check, Pi install, extension/skill packages, and `.env.pi` creation.
+
+Then edit `.env.pi` with your Azure credentials and run:
+
+```bash
+./scripts/run-pi.sh
+# or
+npm run pi
+```
+
+---
+
+## Manual Setup
+
+Prefer the one-command setup above. The steps below show what `setup.sh` does.
+
+### 1. Prerequisites
+
+- **Node 18+** (for Pi and npm packages)
+- **git** (recommended, for package updates)
+
+### 2. Install Pi
 
 ```bash
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent
@@ -31,7 +57,17 @@ Or:
 curl -fsSL https://pi.dev/install.sh | sh
 ```
 
-## 2. Built-in Azure Provider Path
+### 3. Install extensions & skills
+
+```bash
+pi install npm:pi-agent-browser-native
+pi install npm:pi-agent-memory
+pi install npm:pi-prompt-autoresearch
+pi install npm:pi-web-access
+pi install npm:pi-mcporter
+```
+
+### 4. Azure Provider Setup
 
 If your endpoint looks like either of these, start here:
 
@@ -70,7 +106,7 @@ Then run:
 
 Pi should open with the project-local defaults from `.pi/settings.json`.
 
-## 3. Custom Azure AI Foundry Path
+## Custom Azure AI Foundry Path
 
 If your URL is not a standard Azure OpenAI resource base URL, use the custom model path.
 
@@ -92,7 +128,7 @@ Update the model entry in `~/.pi/agent/models.json` to match your deployed model
 
 If your endpoint expects `api-key` headers rather than `Authorization: Bearer`, keep the example shape as-is.
 
-## 4. Recommended First Edit
+## Recommended First Edit
 
 Once you have the exact endpoint and deployed model name in place:
 
@@ -106,7 +142,7 @@ Example:
 Summarize this repository and tell me whether the Azure Pi setup is complete.
 ```
 
-## 5. Notes
+## Notes
 
 - Pi project settings live in `.pi/settings.json`.
 - Pi global settings live in `~/.pi/agent/settings.json`.
